@@ -90,6 +90,11 @@ git push -q origin main
 git push -q origin "v$VER"
 
 echo "==> GitHub-Release"
+# ⚠️ Bei `gh release create datei#label` setzt das # nur die BESCHRIFTUNG, nicht den
+# Dateinamen. Ohne umbenannte Kopie hiesse die Anwendung in jedem Release gleich
+# ("solism5.bin") und man saehe der heruntergeladenen Datei die Version nicht an.
+APP="$(mktemp -d)/solism5-app-v$VER.bin"
+cp build/solism5.bin "$APP"
 gh release create "v$VER" \
   --title "SolisM5 $VER" \
   --notes "${NOTES:-Firmware $VER fuer den M5Stack Core Basic.}
@@ -104,7 +109,7 @@ Anwendung) und wird ab Offset 0 geschrieben:
 \`solism5-app-v$VER.bin\` enthaelt nur die Anwendung — das ist die Datei fuer ein
 Update per espota ueber WLAN." \
   "$BIN#Vollstaendiges Abbild (ab 0x0 flashen)" \
-  "build/solism5.bin#solism5-app-v$VER.bin — nur die Anwendung (fuer espota)"
+  "$APP#Nur die Anwendung (fuer espota ueber WLAN)"
 
 echo
 echo "fertig: v$VER"
