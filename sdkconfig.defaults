@@ -1,0 +1,36 @@
+# SolisM5 — M5Stack Core Basic/Gray (ESP32-D0WDQ6, 4 MB Flash, KEIN PSRAM).
+CONFIG_IDF_TARGET="esp32"
+
+# Flash
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ⚠️ Kein PSRAM auf diesem Board. Alle Sprites liegen im internen RAM und sind
+# deshalb bewusst klein (ui/tiles.cpp: EIN Sprite 148x176 ≈ 52 KB, kein
+# Vollbild-Sprite — der waere 153,6 KB und wuerde neben WLAN+MQTT nicht passen).
+
+# Bluetooth wird nicht gebraucht — aus: spart ~60 KB RAM und viel Flash.
+CONFIG_BT_ENABLED=n
+
+# UI-Reaktivitaet: 1 kHz Tick, damit vTaskDelay(20) wirklich 20 ms sind.
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# ⚠️ Die MQTT-Puffergroesse steht NICHT hier: seit IDF 5.x gibt es dafuer keine
+# Kconfig-Option mehr, sie gehoert in esp_mqtt_client_config_t.buffer
+# (net/ha_mqtt.cpp). Ein CONFIG_MQTT_BUFFER_SIZE an dieser Stelle waere wirkungslos.
+
+# WLAN: statische Puffer, damit die Zuteilung nicht mit den Sprites konkurriert.
+CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM=8
+CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM=16
+CONFIG_ESP32_WIFI_TX_BUFFER_TYPE=1
+CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+
+# espota braucht den Rollback-Pfad nicht, aber die Pruefung beim ersten Boot
+# ist billig und faengt ein halb geflashtes Image ab.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y

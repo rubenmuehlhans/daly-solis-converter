@@ -1,0 +1,9 @@
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+tools/preview_*.png
+tools/verify_colors.html
+assets/fonts/*.vlw
+__pycache__/
+tools/shots_device/

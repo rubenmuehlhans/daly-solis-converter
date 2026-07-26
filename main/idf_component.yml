@@ -1,0 +1,9 @@
+dependencies:
+  idf: ">=5.1"
+  # M5Unified deckt Display, Tasten und Lautsprecher des Core Basic ab.
+  # Beide MIT (LovyanGFX BSD-2) — passt zur Lizenzlage des Projekts.
+  m5stack/m5unified: "^0.2.18"
+  # ⚠️ 0.2.18 deklariert m5gfx NICHT als Registry-Abhaengigkeit (dependencies: []
+  # im Lock), verlangt die Komponente aber per REQUIRES — deshalb explizit.
+  # Wer m5unified anhebt: pruefen, ob das behoben ist.
+  m5stack/m5gfx: "^0.2.25"

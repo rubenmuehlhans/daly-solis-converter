@@ -1,0 +1,11 @@
+# SolisM5 — M5Stack Core Basic/Gray: 4 MB Flash, kein PSRAM.
+# Zwei gleich grosse App-Slots, weil per espota (net/ota.cpp) aktualisiert wird:
+# der laufende Slot bleibt beim Update unangetastet, Rollback ist moeglich.
+# Konfiguration liegt auf SD bzw. in NVS — es gibt bewusst KEIN spiffs.
+# 0x20000 + 2*0x1F0000 = 0x400000, die Karte ist damit exakt voll.
+# Name,   Type, SubType, Offset,  Size,     Flags
+nvs,      data, nvs,     0x9000,  0x5000,
+otadata,  data, ota,     0xe000,  0x2000,
+phy_init, data, phy,     0x10000, 0x1000,
+ota_0,    app,  ota_0,   0x20000, 0x1F0000,
+ota_1,    app,  ota_1,   ,        0x1F0000,

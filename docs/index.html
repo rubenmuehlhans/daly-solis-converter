@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SolisM5 — Firmware im Browser flashen</title>
+<meta name="description" content="DALY-BMS zu SOLIS-Wechselrichter auf M5Stack Core Basic. Firmware direkt aus dem Browser aufspielen.">
+<style>
+  /* Farben aus derselben Palette wie die Firmware (tools/gen_ds_colors.py) */
+  :root {
+    --bg: #071116; --card: #0e1a20; --card-hi: #12222a; --border: #263238;
+    --fg: #eaeff1; --muted: #95a1a5; --primary: #40b9ba; --accent: #eca842;
+    --ok: #53be70; --crit: #f14445;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.15rem; margin: 40px 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  a { color: var(--primary); }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin: 24px 0;
+  }
+  .flash { background: var(--card-hi); text-align: center; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 6px 0; }
+  code {
+    background: var(--card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 6px; font-size: 0.9em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .warn { border-left: 3px solid var(--accent); padding-left: 16px; color: var(--muted); }
+  .crit { border-left: 3px solid var(--crit); padding-left: 16px; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .shots img { width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; }
+  .shots figcaption { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+  figure { margin: 0; }
+  .unsupported { color: var(--accent); }
+  footer { color: var(--muted); font-size: 0.9rem; margin-top: 56px; }
+  esp-web-install-button { --esp-tools-button-color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>SolisM5</h1>
+  <p class="sub">
+    Adapter zwischen einem DALY/Deligreen Smart BMS und einem SOLIS-Hybrid-Wechselrichter,
+    auf einem M5Stack Core Basic. Liest das BMS über UART, regelt Lade- und Entladestrom
+    anhand der höchsten Zellspannung und meldet den Pylontech-Datensatz über CAN.
+  </p>
+
+  <div class="card flash">
+    <p style="margin-top:0"><strong>Firmware direkt aus dem Browser aufspielen</strong></p>
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate" style="
+        background: var(--primary); color: var(--bg); border: 0; border-radius: 8px;
+        padding: 12px 28px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+        M5Stack anschließen und flashen
+      </button>
+      <span slot="unsupported" class="unsupported">
+        Dieser Browser kann kein Web Serial. Es geht mit Chrome oder Edge am Rechner
+        (nicht am Telefon, nicht in Safari oder Firefox).
+      </span>
+      <span slot="not-allowed" class="unsupported">
+        Web Serial braucht eine gesicherte Verbindung (HTTPS).
+      </span>
+    </esp-web-install-button>
+    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:0">
+      Version 2.0.0 · ESP32 · 1,4 MB
+    </p>
+  </div>
+
+  <h2>Bevor du flashst</h2>
+  <ol>
+    <li>M5Stack per USB-C anschließen. Unter macOS und Windows braucht der
+      serielle Wandler einen Treiber — je nach Baujahr
+      <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers">CP210x</a>
+      oder <a href="https://www.wch-ic.com/downloads/CH341SER_ZIP.html">CH9102</a>.</li>
+    <li>Auf „flashen“ klicken und im Dialog den passenden Port auswählen
+      (<code>usbserial</code> im Namen).</li>
+    <li>Der Vorgang löscht den gesamten Flash-Speicher. Die WLAN- und
+      MQTT-Zugangsdaten liegen danach wieder ausschließlich auf der SD-Karte —
+      siehe unten.</li>
+  </ol>
+
+  <div class="card crit">
+    <p style="margin-top:0"><strong>Erst lesen, wenn eine echte Batterie dranhängt.</strong></p>
+    <p style="margin-bottom:0">
+      Diese Firmware steuert Lade- und Entladestrom einer LiFePO4-Hausbatterie. Die
+      Schwellen sind auf einen 16s-Aufbau mit DALY-BMS und einen SOLIS RHI-4.6K-48ES-5G
+      eingestellt und stammen aus einem im Feld erprobten Vorgänger. Wer einen anderen
+      Aufbau hat, muss sie in <code>main/app_config.h</code> prüfen, bevor er den
+      Wechselrichter anschließt. Ohne Gewähr.
+    </p>
+  </div>
+
+  <h2>Konfiguration</h2>
+  <p>
+    Eine Datei <code>config.txt</code> im Wurzelverzeichnis der SD-Karte, danach das
+    Gerät neu starten. Die Werte werden zusätzlich im internen Speicher abgelegt, das
+    Gerät startet also auch ohne Karte weiter.
+  </p>
+<pre style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; overflow-x:auto"><code>wifi_ssid=
+wifi_password=
+mqtt_ip=
+mqtt_port=1883
+mqtt_user=
+mqtt_password=</code></pre>
+  <p class="warn">
+    Ohne WLAN und MQTT läuft der Adapter vollständig weiter — Netz ist nur für Home
+    Assistant und Funk-Updates nötig.
+  </p>
+
+  <h2>So sieht es aus</h2>
+  <div class="shots">
+    <figure>
+      <img src="img/page0_energie.png" alt="Seite Energie: Ladezustand 82,4 % mit Füllbalken, Spannung 53,2 V, Strom -110 A">
+      <figcaption>Energie — Ladezustand, Spannung, Strom, Leistung</figcaption>
+    </figure>
+    <figure>
+      <img src="img/page1_batterie.png" alt="Seite Batterie: höchste und niedrigste Zelle, Streuung, Temperatur">
+      <figcaption>Batterie — Zellen im Blick, Streuung farbig gewarnt</figcaption>
+    </figure>
+    <figure>
+      <img src="img/page2_zellen.png" alt="Seite Zellen: 16 Balken auf enger Skala, ein Ausreißer sticht heraus">
+      <figcaption>Zellen — enge Skala, damit Drift sichtbar wird</figcaption>
+    </figure>
+    <figure>
+      <img src="img/page3_system.png" alt="Seite System: Lade- und Entladestrom, Restkapazität, Netz, Betrieb">
+      <figcaption>System — Ströme, Restkapazität, Netz, Betriebszustand</figcaption>
+    </figure>
+    <figure>
+      <img src="img/page0_nacht.png" alt="Dieselbe Energie-Seite in der Nachtpalette, amber auf schwarz">
+      <figcaption>Nachtansicht — eigene Palette, nicht nur gedimmt</figcaption>
+    </figure>
+    <figure>
+      <img src="img/confirm_mos.png" alt="Bestätigungsdialog: MOSFET ausschalten, Taste C halten, Fortschrittsbalken">
+      <figcaption>MOSFETs schalten — nur mit Halte-Bestätigung</figcaption>
+    </figure>
+  </div>
+
+  <h2>Bedienung</h2>
+  <ul>
+    <li><strong>A</strong> — nächste Seite</li>
+    <li><strong>B</strong> — Tag-/Nachtansicht; 1 s halten schaltet den Signalton</li>
+    <li><strong>C</strong> — 1,5 s halten schaltet die MOSFETs im BMS</li>
+  </ul>
+
+  <footer>
+    Quellcode, Schaltung und Entwicklungsdoku:
+    <a href="https://github.com/rubenmuehlhans/daly-solis-converter">github.com/rubenmuehlhans/daly-solis-converter</a>
+  </footer>
+
+</div>
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</body>
+</html>
