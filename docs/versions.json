@@ -5,7 +5,7 @@
       "version": "2.0.0",
       "date": "2026-07-26",
       "manifest": "manifests/v2.0.0.json",
-      "notes": "Erste ESP-IDF-Fassung: vier Seiten, Tag-/Nachtansicht, Bedienung über die Tasten A/B/C. Gleicher Funktionsumfang wie der Arduino-Vorgänger."
+      "notes": "Erste ESP-IDF-Fassung. Gleicher Funktionsumfang wie der Arduino-Vorgänger: DALY-Protokoll, Lade-/Entladeregelung, Pylontech-CAN, Home Assistant, espota. Neu gestaltete Anzeige mit vier Seiten, Tag-/Nachtansicht und Bedienung über die Tasten A/B/C."
     }
   ]
 }
