@@ -1,13 +1,12 @@
 {
   "name": "SolisM5 — DALY-BMS zu SOLIS",
   "version": "2.0.0",
-  "home_assistant_domain": "solism5",
   "new_install_prompt_erase": true,
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
-        { "path": "firmware/solism5-v2.0.0.bin", "offset": 0 }
+        { "path": "../firmware/solism5-v2.0.0.bin", "offset": 0 }
       ]
     }
   ]

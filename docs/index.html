@@ -57,7 +57,16 @@
 
   <div class="card flash">
     <p style="margin-top:0"><strong>Firmware direkt aus dem Browser aufspielen</strong></p>
-    <esp-web-install-button manifest="manifest.json">
+
+    <p id="picker" hidden>
+      <label for="version" style="color:var(--muted); font-size:0.9rem">Version</label>
+      <select id="version" style="
+        background: var(--card); color: var(--fg); border: 1px solid var(--border);
+        border-radius: 6px; padding: 7px 10px; font-size: 0.95rem; margin-left: 6px;">
+      </select>
+    </p>
+
+    <esp-web-install-button id="installer">
       <button slot="activate" style="
         background: var(--primary); color: var(--bg); border: 0; border-radius: 8px;
         padding: 12px 28px; font-size: 1rem; font-weight: 600; cursor: pointer;">
@@ -71,8 +80,9 @@
         Web Serial braucht eine gesicherte Verbindung (HTTPS).
       </span>
     </esp-web-install-button>
-    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:0">
-      Version 2.0.0 · ESP32 · 1,4 MB
+
+    <p id="verinfo" style="color:var(--muted); font-size:0.9rem; margin-bottom:0">
+      Versionen werden geladen …
     </p>
   </div>
 
@@ -159,5 +169,56 @@ mqtt_password=</code></pre>
 
 </div>
 <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<script>
+// Versionsauswahl. Die Liste steht in versions.json, je Version gibt es ein
+// Manifest unter manifests/. Beides schreibt tools/release.sh mit — wer eine
+// Version von Hand nachtraegt, muss beide Dateien anfassen.
+//
+// Die Binaerdateien liegen bewusst IM REPO (docs/firmware/) und nicht nur an den
+// GitHub-Releases: so laedt der Flasher alles vom selben Ursprung wie die Seite,
+// ohne auf CORS-Kopfzeilen oder API-Limits angewiesen zu sein.
+(async () => {
+  const sel  = document.getElementById("version");
+  const info = document.getElementById("verinfo");
+  const btn  = document.getElementById("installer");
+
+  const apply = (v) => {
+    btn.manifest = v.manifest;          // Attribut umsetzen -> naechster Klick nimmt es
+    btn.setAttribute("manifest", v.manifest);
+    info.textContent = `Version ${v.version} · ${v.date} · ESP32`
+      + (v.notes ? ` — ${v.notes}` : "");
+  };
+
+  try {
+    const res = await fetch("versions.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    const list = data.versions || [];
+    if (!list.length) throw new Error("keine Versionen");
+
+    for (const v of list) {
+      const o = document.createElement("option");
+      o.value = v.version;
+      o.textContent = v.version === data.latest ? `${v.version} (neueste)` : v.version;
+      sel.appendChild(o);
+    }
+    sel.value = data.latest || list[0].version;
+    apply(list.find((v) => v.version === sel.value) || list[0]);
+
+    // Nur anzeigen, wenn es wirklich etwas zu waehlen gibt.
+    if (list.length > 1) document.getElementById("picker").hidden = false;
+
+    sel.addEventListener("change", () => {
+      apply(list.find((v) => v.version === sel.value));
+    });
+  } catch (e) {
+    // Ohne Liste bleibt der Flasher benutzbar: auf das neueste Manifest zurueckfallen
+    // und den Fehler benennen, statt den Knopf tot dastehen zu lassen.
+    btn.setAttribute("manifest", "manifests/v2.0.0.json");
+    info.textContent = "Versionsliste nicht ladbar — es wird 2.0.0 angeboten.";
+    console.error("versions.json:", e);
+  }
+})();
+</script>
 </body>
 </html>

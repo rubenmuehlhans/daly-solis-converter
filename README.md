@@ -95,6 +95,10 @@ auf dem Telefon. Je nach Baujahr des M5Stack ist vorher ein Treiber für den ser
 Wandler nötig ([CP210x](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
 oder [CH9102](https://www.wch-ic.com/downloads/CH341SER_ZIP.html)).
 
+Sobald es mehr als eine Version gibt, steht über dem Knopf eine **Versionsauswahl** —
+voreingestellt ist die neueste. Alle Fassungen liegen unter
+[Releases](https://github.com/rubenmuehlhans/daly-solis-converter/releases).
+
 ### 2. Fertiges Abbild mit esptool
 
 ```bash
@@ -249,13 +253,23 @@ Bildspeicher base64-kodiert über die serielle Konsole (~150 s). Ergebnis in
 `tools/shots_device/`. Danach **ohne** `-DSOLIS_SELFTEST=1` neu flashen — im Selbsttest
 wird der BMS-Task gar nicht gestartet.
 
-### Web-Flasher aktualisieren
+### Eine Version veröffentlichen
 
 ```bash
-esptool.py --chip esp32 merge_bin -o docs/firmware/solism5-v2.0.0.bin --flash_mode dio --flash_freq 40m --flash_size 4MB 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0xe000 build/ota_data_initial.bin 0x20000 build/solism5.bin
+NOTES="Was in dieser Version neu ist" tools/release.sh 2.1.0
 ```
 
-Danach Dateinamen und Version in `docs/manifest.json` nachziehen.
+Das Skript baut, führt Bootloader, Partitionstabelle und Anwendung zu **einem** Abbild
+zusammen, schreibt das Manifest, trägt die Version in `docs/versions.json` ein, committet,
+taggt und legt das GitHub-Release samt Abbildern an.
+
+Der Web-Flasher zeigt genau die Versionen, die in `docs/versions.json` stehen — deshalb
+macht das Skript beides in einem Rutsch. Wer von Hand released, vergisst sonst eines von
+beidem und der Flasher bietet die neue Fassung nicht an.
+
+Die Abbilder liegen bewusst **im Repository** unter `docs/firmware/` und nicht nur an den
+Releases: so lädt der Flasher alles vom selben Ursprung wie die Seite und hängt weder an
+CORS-Kopfzeilen noch an API-Grenzen von GitHub.
 
 ---
 
